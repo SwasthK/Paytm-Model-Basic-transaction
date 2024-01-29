@@ -13,24 +13,22 @@ AccountRouter.get('/balance', userauth, async (req, res) => {
     })
 })
 
-AccountRouter.post('/transfer', userauth, async (req, res) => {
+AccountRouter.put('/transfer', userauth, async (req, res) => {
     const { to, ammount } = req.body
 
-    console.log(to);
-    console.log(ammount);
+    const money = parseInt(ammount)
 
     const senduser = await Account.findOne({
         UserId: req.userId
     })
 
-    console.log(senduser);
 
     if (!senduser) {
         res.status(411).json({})
         return
     }
 
-    if (senduser.balance < ammount) {
+    if (senduser.balance < money) {
         res.status(411).json({ message: "Insuffiecnt balance" })
         return
     }
@@ -39,7 +37,6 @@ AccountRouter.post('/transfer', userauth, async (req, res) => {
         UserId: to
     })
 
-    console.log(recieveuser);
 
     if (!recieveuser) {
         res.status(411).json({ message: " Invalid account" })
@@ -49,7 +46,7 @@ AccountRouter.post('/transfer', userauth, async (req, res) => {
     await Account.updateOne({ UserId: senduser.UserId },
         {
             $inc:
-                { balance: -ammount }
+                { balance: -money }
         })
 
     console.log(senduser);
@@ -57,7 +54,7 @@ AccountRouter.post('/transfer', userauth, async (req, res) => {
     await Account.updateOne({ UserId: recieveuser.UserId },
         {
             $inc:
-                { balance: ammount }
+                { balance: money }
         })
 
     console.log(recieveuser);

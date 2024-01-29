@@ -17,6 +17,7 @@ app.use((err,req,res,next)=>{
         message:"server is not responding"
     })
 })
+
 app.listen(PORT, () => {
     console.log(`Server is listening at ${PORT}`);
 })

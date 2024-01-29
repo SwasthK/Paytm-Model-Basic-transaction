@@ -67,7 +67,10 @@ const signinbody = zod.object({
 })
 
 UserRouter.post('/signin', async (req, res) => {
+    console.log("-----------");
+    console.log(req.body);
     const { success } = signinbody.safeParse(req.body)
+    // console.log(success);
     if (!success) {
         res.status(411).json({
             message: "Please enter the valid input !"
@@ -76,7 +79,10 @@ UserRouter.post('/signin', async (req, res) => {
     }
 
     const userfound = await User.findOne({
-        username: req.body.username
+        $and: [{
+            username: req.body.username,
+            password: req.body.password
+        }]
     })
 
     if (!userfound) {
@@ -110,8 +116,7 @@ UserRouter.put('/', userauth, async (req, res) => {
         })
         return;
     }
-    console.log(req.body);
-    console.log(req.userId);
+
     const update = await User.updateOne({ _id: req.userId },
         req.body
     )
@@ -121,34 +126,55 @@ UserRouter.put('/', userauth, async (req, res) => {
     })
 })
 
-// UserRouter.get('/bulk', userauth, (req, res) => {
-//     const search = req.query.filter || ""
-
-//     console.log(search);  //provides correct value of the query
-
-//     const user = User.find({
-//         $or: [{
-//             firstname: {
-//                 "$regex": search
-//             }
-//         }, {
-//             lastname: {
-//                 "$regex": search
-//             }
-//         }]
-//     })
-
-//     console.log(user);    //Provides a long object
-
-//     res.status(200).json({
-//         users: user.map(element => ({
-//             firstname: element.username,
-//             lastname: element.lastname,
-//             username: element.username,
-//             id: element._id
-//         }))
-//     })
-
+// UserRouter.get('/allusers', async (req, res) => {
+//     const allusers = await User.find({})
+//     try {
+//         if (!allusers) {
+//             return res.status(411).json({
+//                 message: "Sorry we are unable to fetch the data!"
+//             })
+//         }
+//         else {
+//             console.log(allusers);
+//             return res.status(200).json({
+//                 bulkusers: allusers.map(u => ({
+//                     firstname: u.firstname,
+//                     lastname: u.lastname
+//                 }))
+//             })
+//         }
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(411).json({
+//             message: "Sorry we are unable to fetch the data!"
+//         })
+//     }
 // })
+
+UserRouter.get('/allusers', async (req, res) => {
+
+    const search = req.query.filter || ""
+    const user = await User.find({
+        $or: [{
+            firstname: {
+                "$regex": search
+            }
+        }, {
+            lastname: {
+                "$regex": search
+            }
+        }]
+    })
+
+    res.status(200).json({
+        users: user.map(element => ({
+            firstname: element.firstname,
+            lastname: element.lastname,
+            username: element.username,
+            id: element._id
+        }))
+    })
+
+})
 
 module.exports = UserRouter
